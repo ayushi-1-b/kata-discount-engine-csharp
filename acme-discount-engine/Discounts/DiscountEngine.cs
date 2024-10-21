@@ -96,10 +96,8 @@ namespace acme_discount_engine.Discounts
             foreach (var item in ProcessedList)
             {
                 itemTotal += item.item.Price;
-
                 // only applied for perishable and non perishable for now.
-                item.ApplyDiscount(NoDiscountList);
-
+                item.ApplyDiscount(NoDiscountList, Time);
             }
 
             ApplyBulkDiscounts(ProcessedList);

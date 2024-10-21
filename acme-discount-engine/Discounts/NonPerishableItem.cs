@@ -12,24 +12,24 @@ namespace acme_discount_engine.Discounts
         public Item item { get; set; }
         public int Quantity { get; set; } = 0;
 
-        public void ApplyDiscount(List<string> NoDiscount)
+        public void ApplyDiscount(List<string> NoDiscount, DateTime time)
         {
-            int daysUntilDate = (item.Date - DateTime.Today).Days;
-            if (DateTime.Today > item.Date) { daysUntilDate = -1; }
+            int daysUntilDate = (this.item.Date - DateTime.Today).Days;
+            if (DateTime.Today >  this.item.Date) { daysUntilDate = -1; }
 
-            if (!NoDiscount.Contains(item.Name))
+            if (!NoDiscount.Contains(this.item.Name))
             {
                 if (daysUntilDate >= 6 && daysUntilDate <= 10)
                 {
-                    item.Price -= item.Price * 0.05;
+                    this.item.Price -= this.item.Price * 0.05;
                 }
                 else if (daysUntilDate >= 0 && daysUntilDate <= 5)
                 {
-                    item.Price -= item.Price * 0.10;
+                     this.item.Price -= this.item.Price * 0.10;
                 }
                 else if (daysUntilDate < 0)
                 {
-                    item.Price -= item.Price * 0.20;
+                    this.item.Price -= this.item.Price * 0.20;
                 }
             }
         }

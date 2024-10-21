@@ -13,6 +13,6 @@ namespace acme_discount_engine.Discounts
 
         int Quantity { get; set; }
 
-        void ApplyDiscount(List<string> NoDiscount);
+        void ApplyDiscount(List<string> NoDiscount, DateTime time);
     }
 }
