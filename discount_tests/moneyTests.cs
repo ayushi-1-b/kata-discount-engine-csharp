@@ -34,6 +34,20 @@ namespace DiscountTests
         }
 
         [TestMethod]
+        public void TestDecreaseByPercent()
+        {
+            // Arrange
+            Money amount = new Money(45.66);
+            double percent = 25;
+
+            // Act
+            Money result = amount.DecreaseByPercent(percent);
+
+            // Assert
+            Assert.AreEqual(34.245m, result.Amount, "Raising the amount by percent did not return the expected result.");
+        }
+
+        [TestMethod]
         public void TestSubtractMoney()
         {
 

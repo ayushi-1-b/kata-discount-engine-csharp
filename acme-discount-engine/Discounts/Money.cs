@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace acme_discount_engine.Discounts
 {
     public class Money
@@ -21,6 +16,7 @@ namespace acme_discount_engine.Discounts
         }
 
         public double ToDouble() => (double)Amount;
+
         public Money Add(Money money)
         {
             return new Money(Amount + money.Amount);
@@ -42,6 +38,7 @@ namespace acme_discount_engine.Discounts
             decimal decrease = Amount * (decimal)(percent / 100);
             return new Money(Amount - decrease);
         }
+
         public Money Round()
         {
             decimal scaledAmount = Amount * 100;

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace acme_discount_engine.Discounts
 {
-    internal interface DiscountEngineItem
+    public interface DiscountEngineItem
     {
         Item item { get; set; }
 
