@@ -3,7 +3,7 @@
 namespace acme_discount_engine.Discounts
 {
     public class DiscountEngine
-    { 
+    {
         public bool LoyaltyCard { get; set; }
         public DateTime Time { get; set; } = DateTime.Now;
 
@@ -71,7 +71,9 @@ namespace acme_discount_engine.Discounts
                     {
                         for (int j = 0; j < 10; j++)
                         {
-                            items[i - j].item.Price -= items[i - j].item.Price * 0.02;
+                            Money price = new Money(items[i - j].item.Price);
+                            price = price.DecreaseByPercent(2.0);
+                            items[i - j].item.Price = price.ToDouble();
                         }
                         itemCount = 0;
                     }
@@ -81,35 +83,37 @@ namespace acme_discount_engine.Discounts
 
         public double ApplyLoyaltyCardDiscount(double total)
         {
-            total -= total * 0.02;
-            return total;
+            Money totalMoney = new Money(total);
+            totalMoney = totalMoney.DecreaseByPercent(2);
+            return totalMoney.ToDouble();
         }
 
         public double ApplyDiscounts(List<Item> items)
         {
+
             List<DiscountEngineItem> ProcessedList = ProcessItems(items);
 
             ApplyTwoForOneDiscount(ProcessedList);
 
-            double itemTotal = 0.00;
+            Money itemTotal = new Money(0.00);
 
             foreach (var item in ProcessedList)
             {
-                itemTotal += item.item.Price;
+                itemTotal = itemTotal.Add(new Money(item.item.Price));
                 // only applied for perishable and non perishable for now.
                 item.ApplyDiscount(NoDiscountList, Time);
             }
 
             ApplyBulkDiscounts(ProcessedList);
 
-            double finalTotal = ProcessedList.Sum(item => item.item.Price);
+            Money finalTotal = new Money(ProcessedList.Sum(item => item.item.Price));
 
-            if (LoyaltyCard && itemTotal >= 50.00)
+            if (LoyaltyCard && itemTotal.Amount >= 50.00m)
             {
-                finalTotal = ApplyLoyaltyCardDiscount(finalTotal);
+                finalTotal = new Money(ApplyLoyaltyCardDiscount(finalTotal.ToDouble()));
             }
 
-            return Math.Round(finalTotal, 2);
+            return finalTotal.Round().ToDouble();
         }
     }
 }
