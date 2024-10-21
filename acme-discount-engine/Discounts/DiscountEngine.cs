@@ -8,95 +8,70 @@ namespace acme_discount_engine.Discounts
         public DateTime Time { get; set; } = DateTime.Now;
 
         private List<string> TwoForOneList = new List<string> { "Freddo" };
-        private List<string> NoDiscount = new List<string> { "T-Shirt", "Keyboard", "Drill", "Chair" };
 
-        public void ApplyTwoForOneDiscount(List<Item> items)
+        private List<string> NoDiscountList = new List<string> { "T-Shirt", "Keyboard", "Drill", "Chair" };
+
+        private List<DiscountEngineItem> ProcessItems(List<Item> items)
         {
-            items.Sort((x, y) => x.Name.CompareTo(y.Name));
+            List<DiscountEngineItem> ConvertedItems = new List<DiscountEngineItem>();
+            foreach (var item in items)
+            {
+                if (item.IsPerishable)
+                {
+                    ConvertedItems.Add(new PerishableItem(item));
+                }
+                else
+                {
+                    ConvertedItems.Add(new NonPerishableItem(item));
+                }
+            }
+            return ConvertedItems;
+        }
+
+        private void ApplyTwoForOneDiscount(List<DiscountEngineItem> items)
+        {
+            items.Sort((x, y) => x.item.Name.CompareTo(y.item.Name));
             string currentItem = string.Empty;
             int itemCount = 0;
 
             for (int i = 0; i < items.Count; i++)
             {
-                if (items[i].Name != currentItem)
+                if (items[i].item.Name != currentItem)
                 {
-                    currentItem = items[i].Name;
+                    currentItem = items[i].item.Name;
                     itemCount = 1;
                 }
                 else
                 {
                     itemCount++;
-                    if (itemCount == 3 && TwoForOneList.Contains(items[i].Name))
+                    if (itemCount == 3 && TwoForOneList.Contains(items[i].item .Name))
                     {
-                        items[i].Price = 0.00;
+                        items[i].item.Price = 0.00;
                         itemCount = 0;
                     }
                 }
             }
         }
 
-        public void ApplyPerishableItemDiscount(Item item, int daysUntilDate)
-        {
-            if (daysUntilDate == 0)
-            {
-                if (Time.Hour >= 0 && Time.Hour < 12)
-                {
-                    item.Price -= item.Price * 0.05;
-                }
-                else if (Time.Hour >= 12 && Time.Hour < 16)
-                {
-                    item.Price -= item.Price * 0.10;
-                }
-                else if (Time.Hour >= 16 && Time.Hour < 18)
-                {
-                    item.Price -= item.Price * 0.15;
-                }
-                else if (Time.Hour >= 18)
-                {
-                    item.Price -= item.Price * (!item.Name.Contains("(Meat)") ? 0.25 : 0.15);
-                }
-            }
-        }
-
-        public void ApplyNonPerishableItemDiscount(Item item, int daysUntilDate)
-        {
-            if (!NoDiscount.Contains(item.Name))
-            {
-                if (daysUntilDate >= 6 && daysUntilDate <= 10)
-                {
-                    item.Price -= item.Price * 0.05;
-                }
-                else if (daysUntilDate >= 0 && daysUntilDate <= 5)
-                {
-                    item.Price -= item.Price * 0.10;
-                }
-                else if (daysUntilDate < 0)
-                {
-                    item.Price -= item.Price * 0.20;
-                }
-            }
-
-        }
-
-        public void ApplyBulkDiscounts(List<Item> items)
+        private void ApplyBulkDiscounts(List<DiscountEngineItem> items)
         {
             string currentItem = string.Empty;
             int itemCount = 0;
             for (int i = 0; i < items.Count; i++)
             {
-                if (items[i].Name != currentItem)
+                if (items[i].item.Name != currentItem)
                 {
-                    currentItem = items[i].Name;
+                    currentItem = items[i].item.Name;
                     itemCount = 1;
                 }
                 else
                 {
                     itemCount++;
-                    if (itemCount == 10 && !TwoForOneList.Contains(items[i].Name) && items[i].Price >= 5.00)
+                    if (itemCount == 10 && !TwoForOneList.Contains(items[i].item.Name) && items[i].item.Price >= 5.00)
                     {
                         for (int j = 0; j < 10; j++)
                         {
-                            items[i - j].Price -= items[i - j].Price * 0.02;
+                            items[i - j].item.Price -= items[i - j].item.Price * 0.02;
                         }
                         itemCount = 0;
                     }
@@ -112,27 +87,22 @@ namespace acme_discount_engine.Discounts
 
         public double ApplyDiscounts(List<Item> items)
         {
-            ApplyTwoForOneDiscount(items);
-            double itemTotal = 0.00;
-            foreach (var item in items)
-            {
-                itemTotal += item.Price;
-                int daysUntilDate = (item.Date - DateTime.Today).Days;
-                if(DateTime.Today > item.Date) { daysUntilDate = -1; }
+            List<DiscountEngineItem> ProcessedList = ProcessItems(items);
 
-                if (!item.IsPerishable)
-                {
-                    ApplyNonPerishableItemDiscount(item,daysUntilDate);
-                }
-                else
-                {
-                    ApplyPerishableItemDiscount(item, daysUntilDate);
-                }
+            ApplyTwoForOneDiscount(ProcessedList);
+
+            double itemTotal = 0.00;
+
+            foreach (var item in ProcessedList)
+            {
+                itemTotal += item.item.Price;
+                // only applied for perishable and non perishable for now.
+                item.ApplyDiscount(NoDiscountList, Time);
             }
 
-            ApplyBulkDiscounts(items);
+            ApplyBulkDiscounts(ProcessedList);
 
-            double finalTotal = items.Sum(item => item.Price);
+            double finalTotal = ProcessedList.Sum(item => item.item.Price);
 
             if (LoyaltyCard && itemTotal >= 50.00)
             {
